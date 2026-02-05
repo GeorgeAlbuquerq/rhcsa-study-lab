@@ -1230,12 +1230,226 @@ Para testar soluções das questões, use a aba "Questões" e clique em "Testar 
             } else if (comando in comandosTerminal) {
                 adicionarSaidaTerminal(comandosTerminal[comando], 'normal');
             } else {
-                adicionarSaidaTerminal(`bash: ${comando}: comando não encontrado\nDigite 'help' para ajuda.`, 'error');
+                // Tentar executar comando genérico
+                executarComandoGenerico(comando);
             }
             
             // Limpar input
             input.value = '';
             input.focus();
+        }
+
+        function executarComandoGenerico(comando) {
+            const cmd = comando.toLowerCase();
+            
+            // Comandos de navegação
+            if (cmd.startsWith('cd ')) {
+                const dir = comando.substring(3).trim();
+                adicionarSaidaTerminal(`Diretório alterado para: ${dir}`, 'success');
+                return;
+            }
+            
+            // Comandos de arquivo
+            if (cmd === 'pwd') {
+                adicionarSaidaTerminal('/root', 'normal');
+                return;
+            }
+            if (cmd === 'ls' || cmd === 'ls -l' || cmd === 'ls -la') {
+                adicionarSaidaTerminal('Desktop  Documents  Downloads  Music  Pictures  Public  Templates  Videos', 'normal');
+                return;
+            }
+            if (cmd === 'cat /etc/hostname') {
+                adicionarSaidaTerminal('rhcsa-lab', 'normal');
+                return;
+            }
+            if (cmd.startsWith('cat ')) {
+                const arquivo = comando.substring(4).trim();
+                adicionarSaidaTerminal(`Conteúdo de ${arquivo}:\n[simulado]`, 'normal');
+                return;
+            }
+            
+            // Comandos de sistema
+            if (cmd === 'uname -a') {
+                adicionarSaidaTerminal('Linux rhcsa-lab 4.18.0-348.el8.x86_64 #1 SMP Wed Oct 13 14:25:44 UTC 2021 x86_64 x86_64 x86_64 GNU/Linux', 'normal');
+                return;
+            }
+            if (cmd === 'whoami') {
+                adicionarSaidaTerminal('root', 'normal');
+                return;
+            }
+            if (cmd === 'id') {
+                adicionarSaidaTerminal('uid=0(root) gid=0(root) groups=0(root)', 'normal');
+                return;
+            }
+            if (cmd === 'hostname') {
+                adicionarSaidaTerminal('rhcsa-lab', 'normal');
+                return;
+            }
+            if (cmd === 'date') {
+                const data = new Date().toString();
+                adicionarSaidaTerminal(data, 'normal');
+                return;
+            }
+            if (cmd === 'uptime') {
+                adicionarSaidaTerminal('12:45:23 up 5 days, 3:22, 1 user, load average: 0.15, 0.10, 0.09', 'normal');
+                return;
+            }
+            
+            // Comandos de rede
+            if (cmd.startsWith('ping ')) {
+                const host = comando.substring(5).trim();
+                adicionarSaidaTerminal(`PING ${host} (192.168.1.1) 56(84) bytes of data\n64 bytes from ${host}: icmp_seq=1 ttl=64 time=1.23 ms`, 'normal');
+                return;
+            }
+            if (cmd === 'ifconfig' || cmd === 'ip addr' || cmd === 'ip addr show') {
+                adicionarSaidaTerminal('eth0: <BROADCAST,MULTICAST,UP,LOWER_UP>\n    inet 192.168.1.100/24 brd 192.168.1.255\n    inet6 fe80::1/64 scope link', 'normal');
+                return;
+            }
+            if (cmd === 'netstat -tlnp' || cmd === 'ss -tlnp') {
+                adicionarSaidaTerminal('LISTEN     0      128      *:80        *:*    users:(("httpd",pid=1234))\nLISTEN     0      128      *:443       *:*    users:(("httpd",pid=1235))', 'normal');
+                return;
+            }
+            
+            // Comandos de usuário/grupo
+            if (cmd.startsWith('useradd ') || cmd.startsWith('adduser ')) {
+                const user = comando.split(' ').pop();
+                adicionarSaidaTerminal(`Usuário '${user}' criado com sucesso.`, 'success');
+                return;
+            }
+            if (cmd.startsWith('userdel ')) {
+                const user = comando.split(' ').pop();
+                adicionarSaidaTerminal(`Usuário '${user}' removido.`, 'success');
+                return;
+            }
+            if (cmd === 'getent passwd root') {
+                adicionarSaidaTerminal('root:x:0:0:root:/root:/bin/bash', 'normal');
+                return;
+            }
+            
+            // Comandos de permissão
+            if (cmd.startsWith('chmod ')) {
+                adicionarSaidaTerminal('Permissões alteradas com sucesso.', 'success');
+                return;
+            }
+            if (cmd.startsWith('chown ')) {
+                adicionarSaidaTerminal('Propriedade alterada com sucesso.', 'success');
+                return;
+            }
+            
+            // Comandos de arquivo/diretório
+            if (cmd.startsWith('mkdir ')) {
+                const dir = comando.substring(6).trim();
+                adicionarSaidaTerminal(`Diretório '${dir}' criado.`, 'success');
+                return;
+            }
+            if (cmd.startsWith('touch ')) {
+                const arquivo = comando.substring(6).trim();
+                adicionarSaidaTerminal(`Arquivo '${arquivo}' criado.`, 'success');
+                return;
+            }
+            if (cmd.startsWith('rm ')) {
+                const arquivo = comando.substring(3).trim();
+                adicionarSaidaTerminal(`Arquivo '${arquivo}' removido.`, 'success');
+                return;
+            }
+            if (cmd.startsWith('cp ') || cmd.startsWith('mv ')) {
+                adicionarSaidaTerminal('Operação concluída com sucesso.', 'success');
+                return;
+            }
+            
+            // Comandos de busca
+            if (cmd.startsWith('find ')) {
+                adicionarSaidaTerminal('/root/file1.txt\n/root/file2.txt\n/home/user/document.txt', 'normal');
+                return;
+            }
+            if (cmd.startsWith('grep ')) {
+                adicionarSaidaTerminal('matching line found', 'normal');
+                return;
+            }
+            
+            // Comandos de systemd
+            if (cmd.startsWith('systemctl start ') || cmd.startsWith('systemctl stop ') || 
+                cmd.startsWith('systemctl restart ') || cmd.startsWith('systemctl enable ')) {
+                const servico = comando.split(' ').pop();
+                adicionarSaidaTerminal(`Serviço '${servico}' operação executada com sucesso.`, 'success');
+                return;
+            }
+            if (cmd.startsWith('systemctl status ')) {
+                const servico = comando.substring(16).trim();
+                adicionarSaidaTerminal(`● ${servico}.service\n   Loaded: loaded\n   Active: active (running)`, 'success');
+                return;
+            }
+            
+            // Comandos de pacotes
+            if (cmd.startsWith('yum install ') || cmd.startsWith('dnf install ') || 
+                cmd.startsWith('apt install ') || cmd.startsWith('apt-get install ')) {
+                const pkg = comando.split(' ').pop();
+                adicionarSaidaTerminal(`Instalando ${pkg}...\nPacote instalado com sucesso.`, 'success');
+                return;
+            }
+            
+            // Comandos de volume/storage
+            if (cmd === 'lsblk' || cmd === 'lsblk -l') {
+                adicionarSaidaTerminal('NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT\nsda      8:0    0   20G  0 disk\n├─sda1   8:1    0    1G  0 part /boot\n└─sda2   8:2    0   19G  0 part /', 'normal');
+                return;
+            }
+            if (cmd === 'df -h' || cmd === 'df') {
+                adicionarSaidaTerminal('Filesystem      Size  Used Avail Use% Mounted on\n/dev/sda2        19G  5.2G   14G  28% /', 'normal');
+                return;
+            }
+            if (cmd === 'du -sh' || cmd === 'du -sh *') {
+                adicionarSaidaTerminal('4.2G\t.', 'normal');
+                return;
+            }
+            if (cmd === 'mount' || cmd === 'mount | grep') {
+                adicionarSaidaTerminal('/dev/sda1 on /boot type ext4\n/dev/mapper/rhel-root on / type ext4', 'normal');
+                return;
+            }
+            
+            // Comandos LVM
+            if (cmd === 'lvs' || cmd === 'lvscan') {
+                adicionarSaidaTerminal('LV      VG   Attr       LSize\nroot    rhel -wi-ao---- 17.00g\nswap    rhel -wi-ao----  2.00g', 'normal');
+                return;
+            }
+            if (cmd === 'vgs' || cmd === 'vgscan') {
+                adicionarSaidaTerminal('VG   #PV #LV #SN Attr   VSize  VFree\nrhel   1   2   0 wz--n- 19.00g    0', 'normal');
+                return;
+            }
+            if (cmd === 'pvs' || cmd === 'pvscan') {
+                adicionarSaidaTerminal('PV         VG   Fmt  Attr PSize  PFree\n/dev/sda2  rhel lvm2 a--  19.00g    0', 'normal');
+                return;
+            }
+            
+            // Comandos de informação
+            if (cmd === 'free -h' || cmd === 'free') {
+                adicionarSaidaTerminal('              total        used        free\nMem:           1.9G        800M        300M\nSwap:          2.0G          0B        2.0G', 'normal');
+                return;
+            }
+            if (cmd === 'ps aux' || cmd === 'ps -ef') {
+                adicionarSaidaTerminal('USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND\nroot         1  0.0  0.1 169316 13104 ?        Ss   10:00   0:01 /usr/lib/systemd/systemd\nroot      1234  0.2  0.5 123456 56789 ?        Ss   10:05   0:02 /usr/sbin/httpd', 'normal');
+                return;
+            }
+            if (cmd === 'top -b -n 1' || cmd === 'top') {
+                adicionarSaidaTerminal('top - 12:45:23 up 5 days\nTasks:  45 total,   1 running,  44 sleeping\n%Cpu(s):  2.1 us,  1.2 sy', 'normal');
+                return;
+            }
+            
+            // Comandos de segurança
+            if (cmd === 'getenforce') {
+                adicionarSaidaTerminal('Enforcing', 'normal');
+                return;
+            }
+            if (cmd === 'sestatus' || cmd === 'sestatus -v') {
+                adicionarSaidaTerminal('SELinux status:                 enabled\nCurrent mode:                   enforcing', 'normal');
+                return;
+            }
+            if (cmd.startsWith('sudo ')) {
+                adicionarSaidaTerminal('[sudo] password for root: ', 'info');
+                return;
+            }
+            
+            // Se nenhum comando for reconhecido, dar resposta genérica
+            adicionarSaidaTerminal(`Executando: ${comando}\n[Simulação] Comando executado com status: 0`, 'success');
         }
 
         function inserirComando(comando) {
